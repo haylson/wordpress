@@ -1,0 +1,481 @@
+user e senha: haylson
+
+
+(pesquisar como trabalhar com paineis no theme customizer) ????
+
+https://codex.wordpress.org/ (link da documentação)
+
+Em wp-content\themes ficam os temas:
+
+the_excerpt(); (é o resumo do post, que corta o texto na pagina principal para colocar o leia mais por exemplo).
+
+<?php wp_title(); ?> (chama o titulo da pagina).
+
+Colocar no header o seguinte código para que fique compativel a responsividade com dispositivos moveis:
+
+<meta name="viewport" content="width=device-width"> no header.php
+
+Arquivos obrigatorios:
+- index.php
+- style.css (descrição do tema e autor fica aqui)
+- screenshot.png (tamanho ideal: 1200 x 900)
+
+Arquivos do Esqueleto:
+- header.php
+- footer.php
+- sidebar.php
+- functions.php (faz as chamadas e criações de funções para as folhas de estilo css, scripts, sidebar, menu, imagens em miniaturas, formatos de posts diferentes e funcoes especificas)
+- criar pasta css
+	- dentro da pasta css criar o arquivo template.css
+- criar pasta js
+	- dentro da pasta js criar o arquivo template.js
+
+- fazer loopings
+
+- criar arquivo de pagina especifica (template especifico de pagina) caso queira uma pagina customizada, ex: page-sobre.php
+- Template-Name (para criar "modelos" de paginas diferentes) usando o comentário do wordpress:
+<?php 
+
+/*
+
+Template Name: Pagina modelo01
+
+*
+/
+?>
+
+- No arquivo functions.php acrescentar a função add_theme_support(), customiza cabeçalho, fundo do site, miniaturas das imagens dos artigos/postagens, 
+logonarca, tags html5.
+
+- add_theme_support('custom-background'); (fundo da tela)
+
+- add_theme_support('custom-header'); (cabeçalhos)
+
+No caso das imagens de cabeçalho, chamar na pagina depois do get_header(); a função a seguir:
+
+usar o class="img-resposive" para deixar a imagem responsiva, evitando que crie barra de rolagem.
+
+<img class="img-responsive" src="<?php header_image(); ?>" height="<?php echo get_custom_header()->height; ?>" width="<?php echo get_custom_header()->width; ?>" alt="" />
+
+- add_theme_support('post-thumbnails'); (opção de miniaturas das postagens)(codigo fica em functions.php)
+
+Configurar tamanho das miniaturas em configurações do wordpress.
+
+Na pagina de blog/posts que vai aparecer as miniaturas, colocar o código (no looping de post):
+
+<?php the_post_thumbnail('thumbnail'); ?> (miniatura padrao)
+<?php the_post_thumbnail('medium'); ?> (tamanho media)
+<?php the_post_thumbnail('large'); ?> (tamanho grande - 640px)
+<?php the_post_thumbnail('full'); ?> (miniatura total - tamanho completo do arquivo)
+<?php the_post_thumbnail(array(150,150)); ?> (tamanho especificado)
+
+criar um css para alinha as imagens a esquerda
+.wp-post-image{ float: left; margin: 0 15px 10px 0;}
+
+Formato de posts (em functions.php)
+
+- add_theme_support('post-formats', array('video', 'image'));
+
+para diferenciar os tipos de post podemos chamar lá no looping de post a função:
+
+<?php get_post_format(); ?>
+
+Criado o arquivo content.php e colocado o codigo que está dentro do looping de post lá, e dentro do looping é feito uma especie de include com o codigo:
+
+<?php get_template_part('content'); ?> (chama o arquivo content, como poderia chamar qualquer outro arquivo)
+<?php get_template_part('content', get_post_format()); ?> (o segundo paramentro pega o segundo nome do arquivo, caso ele tenha, ex. content-video)
+
+- add_theme_support('html5', array('search-form') );
+
+- add_theme_support('custom-logo', array(
+	'height' => 100,
+	'width' => 200
+ 	));
+
+---
+
+- SIDEBARS
+
+- registrar a função em functions.php
+
+if(function_exists('register_sidebar')){
+	register_sidebar(
+		array(
+			'name' => 'Barra Lateral 1',
+			'id' => 'sidebar-1', //(identificador unico)
+			'description' => 'Barra lateral da pagina home', 
+			'before_widget' => '<div class="widget-wrapper">',
+			'after_widget' => '</div>',
+			'before_title' => '<h2 class="widget-titulo">',
+			'after_title' => '</h2>',
+			'name' => '',
+		)	
+	);
+	register_sidebar(
+		array(
+			'name' => 'Barra Lateral 2',
+			'id' => 'sidebar-2', //(identificador unico)
+			'description' => 'Barra lateral da pagina blog', 
+			'before_widget' => '<div class="widget-wrapper">',
+			'after_widget' => '</div>',
+			'before_title' => '<h2 class="widget-titulo">',
+			'after_title' => '</h2>',
+			'name' => '',
+		)	
+	);
+}
+
+Criar o arquivo sidebar-home.php e outro sidebar-blog.php
+
+<?php 
+
+
+if( is_active_sidebar('sidebar-1')){
+	
+	dynamic_sidebar('sidebar-1');
+}
+
+E pra chamar na pagina home/index ou qualquer que seja, usamos o codigo abaixo pra fazer o binding:
+
+<?php get_sidebar('blog'); ?> (chama o nome depois do tracinho - (sidebar-blog) )
+
+Pra trocar o lado da sidebar depende do local do codigo que for colocado, antes da <div> esquerda ou depois da </div> direita
+
+
+--- Classe WP_QUERY (Orientação a Objetos)
+
+$destaque = new WP_QUERY();
+
+Usando QueryString: WP_QUERY('arg1=abc&arg2=uuu')
+
+
+Usando array: 
+
+$args = array(
+	'post_type'        => 'post',
+	'post_per_page'    => 2,
+	'category__not_in' => 7,
+	'category__in'     => array(6,8),
+	'offset'           => 1, (para nao repetir o primeiro post)
+);
+
+$destaque = new WP_QUERY($args);
+
+usar o wp_reset_postdata(); no final da consulta com o wp_query, para nao atrapalhar o fluxo das consultas no restante do wordpress, 
+deixando a consulta padrao original novamente.
+
+--
+
+<?php
+$itens = get_categories(array(6,7,8)); pegar categorias.
+
+echo '<pre>';
+print_r($itens);
+echo '</pre>';
+
+foreach($itens as $item):
+
+   $args = array(
+	'category__in' => $item->term_id,
+	'posts_per_page' => 1
+   );
+
+   $consulta = new WP_Query($args);
+
+   if($consulta->have_posts()):
+	while($consulta->have_posts()):
+	   $consulta->the_post();
+
+?>
+
+	<div class="col-md-12">
+	   <?php get_template_part('content', 'destaque'); ?>
+	</div>
+
+<?php
+
+	endwhile;
+	wp_reset_postdata();
+
+   endif;
+
+endforeach;
+
+?>
+
+--
+
+Ver links de chamada do autor, post, categoria,
+
+<?php the_permalink(); ?>
+the_author_posts_link();
+the_tags('Tags: ', ', ');
+
+--
+
+Criar arquivo single.php (arquivo da postagem individual).
+- criando tbem o arquivo content-single.php (miolo do artigo).
+
+
+Adicionando comentários no post
+
+- Habilitar opção discussao.
+
+codigo:
+
+if( comments_open() || get_comments_number() ):
+   comments_template();
+endif;
+
+--
+
+Campo de pesquisa:
+
+codigo:
+
+<?php get_search_form(); ?>
+
+criar o add_theme_support('html5', array('search-form') );
+
+Criar um arquivo chamado searchform.php com o código do campo de pesquisa.
+
+codigo do arquivo:
+
+<form role="search" method="get" action="<?php echo home_url('/'); ?>">
+	
+	<input type="search" class="form-control" placeholder="Pesquisa" value="<?php echo get_search_query(); ?>" name="s" title="Pesquisa" />
+
+</form>
+
+Criar o arquivo search.php e o arquivo content_search (caso queria uma pagina especifica para os resultados da pesquisa).
+
+
+--
+
+- Paginação Padrão:
+
+Em configuração > Leitura: Determina a quantidade de post no blog.
+
+
+No arquivo index.php ver codigo:
+
+<div class="paginacao text-left">
+	<?php next_posts_link("<< Mais antigos") ?>
+</div>
+
+<div class="paginacao text-right">
+	<?php previous_posts_link("Mais novos >>"); ?>
+</div>
+
+Outro tipo de paginação, na pagina de pesquisa (search.php), ver codigo:
+
+the_posts_pagination(array(
+	'prev_text'		=> 	'Anterior',
+	'next_text'		=>	'Próximo'
+));
+
+Pode fazer uma paginação também dentro do Post (arquivo single.php)(para o proximo post ou post anterior).
+
+ver codigo:
+
+<div class="paginacao text-left"><?php previous_post_link(); ?></div>
+<div class="paginacao text-right"><?php next_post_link(); ?></div>
+
+
+- Resolvendo problemas com paginação:
+
+mostra 3 situações que da problema na paginação (ver curso)
+
+
+- Criando página para resultado de pesquisa de arquivos, categorias, tags e autores:
+
+Criar o arquivo archive.php e o content-archive.php
+
+colocando o titulo da pagina de pesquisa:
+
+ver codigo:
+
+the_archive_title('<h1 class="titulo-arquivo">','</h1>');
+the_archive_description();
+
+
+- Criando página de Erro 404
+
+Criar o arquivo 404.php
+
+-------
+- Preparando o tema para o básico de SEO:
+
+Vendo o titulo:
+
+<?php wp_title(); ?> (chama o titulo da pagina).
+<title><?php bloginfo('name'); ?><?php wp_title('-'); ?></title> :(nome do site - descricao) (o - é o separador passado como parametro, pode ser | tbem)
+<meta name="description" content="<?php bloginfo('description'); ?>">
+
+Codificação do site (Ex.UTF8):
+<meta charset="<?php bloginfo('charset'); ?>"> (chama de forma automatica)
+
+Lingua do site, determinada na instalação:
+<html <?php language_attributes(); ?>> (traz se a lingua é pt-BR)
+
+
+Remover o codigo generator do header que informa a versao do wordpress, para evitar ataques hackers e deixar mais seguro.
+
+mas para retirar tem que criar uma função no functions.php
+
+ver codigo:
+
+remove_action('wp_head','wp_generator'); (remove o generator)
+--
+
+- Boas Práticas:
+
+the_ID();
+post_class();
+
+
+
+-----
+
+- Instalação e configuração de plugins:
+
+
+motopress slider (Plugin de Slide)
+Black Studio TinyMCE Widget (plugin que cria um widget que aceita codigo html)
+contact form7 (formulario de contato)
+
+Google map (aparecer mapa do google com sua localização)(necessita chave da api do google, get key, criar um projeto, dar um nome a chave, 
+restrição referenciador http e colocar o site, Criar, copiar chave, fechar, colar chave onde pede no plugin, escolher portugues brasil, continuar
+e create your first map).
+
+wp responsive menu (plugin para menu responsivo/sanduiche)
+(Deixando o layoyt mais responsivo com as colunas md e xs do bootstrap)
+
+social icons widget (plugins de redes sociais)
+
+
+echo do_shortcode('[shortcode_aqui]'); (pra mostrar o shortcode dentro de um template).
+
+---
+
+- Entendendo e criando shortcodes:
+
+Em functions.php criar uma função mostra_telefone() por exemplo, e criar a função:
+
+ add_shortcode( 'meutelefone', 'mostra_telefone' ); 
+ 
+(o segundo parametro é a primeira funcao criada)
+
+E na pagina, post, etc: chamado o shortcode entre colchetes: ver codigo:
+
+[meutelefone] 
+
+(e vai aparecer o texto do html retornado pela função)
+
+--------
+
+
+-- Theme Customizer (criando campos personalizados):
+
+- O Theme Customizer é o menu Aparencia/Personalizar do wordpress.
+
+- os Botoes de opções sao as sessoes, e dentro deles tem os controles. (sessoes e controles) tbem tbem paineis. 
+
+(pesquisar como trabalhar com paineis) ????
+
+-- Corrigindo o copyright do footer
+
+- criamos uma nova pasta chamada inc (de include), e dentro dessa pasta criamos um arquivo chamado customizer.php, e dentro
+do arquivo functions.php criamos uma função para identificar esse arquivo do customizer, ver codigo:
+
+require get_template_directory() . '/inc/customizer.php';
+
+- Dentro do customizer.php criamos uma função que pode se chamar meupersonalizador, por exemplo, e no paramentro uma variavel chamada $wp_customizer. 
+
+ver codigo:
+
+function meupersonalizador($wp_customizer){
+
+}
+
+- ainda no customizer.php ao final chamar a função add_action() pra fazer o gancho dessa função que esta no customizer.php, ver codigo:
+
+add_action( 'customize_register', 'meupersonalizador' );
+
+
+- Criou a customização e salvou no banco de dados, precisamos agora na pagina que vai receber a modificação, 
+informar em qual lugar da pagina vai receber esses dados.
+
+Nesse nosso exemplo vamos no footer.php informar a frase de copyright com o codigo:
+
+<?php echo get_theme_mod('set_copyright') ?> (passando o setting como parametro)
+
+--
+
+-- corrigindo a area de serviços:
+
+
+
+
+
+
+
+
+
+
+
+
+----
+
+Conclusão (pesquisar mais assuntos):
+
+(Pesquisar por Blank Wordpress Theme (modelos de temas em branco pra customizar))
+http://naked-wordpress.bckmn.com/ 
+underscores.me
+Page Buildings
+
+CPTs (Custom Post Types)
+Publicar Temas no repositorio do WP.
+Colocar no ThemeForest
+FAzer o checklist para ver se é aprovado colocar no repositorio, ver todos os itens do checklist.
+
+
+--------------------------------------------------
+Informações
+
+- Colocar as informações e descrição do tema no arquivo style.css
+- Ativar o tema.
+- Colocar o esqueleto da pagina no arquivo index.php
+- usar as funções do wordpress: <?php get_header(); ?>, <?php get_sidebar(); ?>
+ e o <?php get_footer(); ?>
+- usar o <?php body_class(); ?> para poder aplicar folhas de estilo em paginas diferentes ou especificas.
+- Criar os arquivos de header, footer e sidebar e dividir o tema em seus devidos lugares.
+- criar o arquivo functions e integrar com a folha de estilos, com os scripts js e com o bootstrap.
+- criar o <?php wp_head(); ?>
+ para chamar os ganchos no começo de body e o <?php wp_footer(); ?> antes do body. E para aparecer o menu do topo do wordpress.
+- Registrar os menus no arquivo functions com a função register_nav_menus() e no header colocar:
+
+ <?php wp_nav_menu( array( 'theme-location' => 'meu_menu_principal') ); ?>
+
+
+Looping Wordpress..
+
+
+
+
+
+header.php: local onde fica o código do cabeçalho
+sidebar.php: local onde fica o código da lateral
+footer.php: local onde fica o código do rodapé
+index.php: código que mostra os artigos na página inicial
+single.php: código que mostra o artigo na sua própria página
+page.php: código que mostra o conteúdo de uma página estática
+archive.php: igual ao index.php, o código nesta parte vai mostrar os artigos que estão no arquivo, nas categorias, tags, etc
+functions.php: local onde ficam algumas funções que adicionam mais capacidades aos temas
+404.php: igual ao index.php, em vez de mostrar um artigo deverá de mostrar um texto a avisar que o conteúdo não foi encontrado
+style.css: ficheiro onde fica o stylesheet do tema
+
+
+
+Sequencia de execução do wordpress (chamado tambem de ganchos ou hooks)
+
